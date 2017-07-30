@@ -1,34 +1,34 @@
 'use strict';
 
 const EventEmitter = require('events');
-const Sequelize = require('sequelize');
+const Sql = require('sql').Sql;
 
-class KeyvSequelize extends EventEmitter {
+class KeyvSql extends EventEmitter {
 	constructor(opts) {
 		super();
 		this.ttlSupport = false;
 
-		opts = Object.assign({
-			table: 'keyv',
-			logging: false
-		}, opts);
+		opts = Object.assign({ table: 'keyv' }, opts);
 
-		const sequelize = new Sequelize(opts.uri, opts);
-		this.Entry = sequelize.define(opts.table, {
-			key: {
-				primaryKey: true,
-				unique: true,
-				type: Sequelize.STRING
-			},
-			value: {
-				type: Sequelize.TEXT
-			}
-		}, {
-			timestamps: false
+		this.sql = new Sql(opts.dialect);
+
+		this.entry = this.sql.define({
+			name: opts.table,
+			columns: [
+				{
+					name: 'key',
+					dataType: 'VARCHAR(255)'
+				},
+				{
+					name: 'value',
+					dataType: 'TEXT'
+				}
+			]
 		});
+		const createTable = this.entry.create().ifNotExists().toString();
 
-		this.connected = sequelize.authenticate()
-			.then(() => sequelize.sync())
+		this.connected = opts.connect()
+			.then(query => query(createTable).then(() => query))
 			.catch(err => this.emit('error', err));
 	}
 
@@ -65,4 +65,4 @@ class KeyvSequelize extends EventEmitter {
 	}
 }
 
-module.exports = KeyvSequelize;
+module.exports = KeyvSql;
