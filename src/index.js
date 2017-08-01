@@ -8,15 +8,16 @@ class KeyvSql extends EventEmitter {
 		super();
 		this.ttlSupport = false;
 
-		opts = Object.assign({ table: 'keyv' }, opts);
+		this.opts = Object.assign({ table: 'keyv' }, opts);
 
-		this.sql = new Sql(opts.dialect);
+		const sql = new Sql(opts.dialect);
 
-		this.entry = this.sql.define({
-			name: opts.table,
+		this.entry = sql.define({
+			name: this.opts.table,
 			columns: [
 				{
 					name: 'key',
+					primaryKey: true,
 					dataType: 'VARCHAR(255)'
 				},
 				{
@@ -27,40 +28,53 @@ class KeyvSql extends EventEmitter {
 		});
 		const createTable = this.entry.create().ifNotExists().toString();
 
-		this.connected = opts.connect()
+		const connected = this.opts.connect()
 			.then(query => query(createTable).then(() => query))
 			.catch(err => this.emit('error', err));
+
+		this.query = sqlString => connected
+			.then(query => query(sqlString));
 	}
 
 	get(key) {
-		return this.connected
-			.then(() => this.Entry.findById(key))
-			.then(data => {
-				if (data === null) {
+		const select = this.entry.select().where({ key }).toString();
+		return this.query(select)
+			.then(rows => {
+				const row = rows[0];
+				if (row === undefined) {
 					return undefined;
 				}
-				return data.get('value');
+				return row.value;
 			});
 	}
 
 	set(key, value) {
-		return this.connected
-			.then(() => this.Entry.upsert({ key, value }));
+		let upsert;
+		if (this.opts.dialect === 'postgres') {
+			upsert = this.entry.insert({ key, value }).onConflict({ columns: ['key'], update: ['value'] }).toString();
+		} else {
+			upsert = this.entry.replace({ key, value }).toString();
+		}
+		return this.query(upsert);
 	}
 
 	delete(key) {
-		return this.connected
-			.then(() => this.Entry.destroy({ where: { key } }))
-			.then(items => items > 0);
+		const select = this.entry.select().where({ key }).toString();
+		const del = this.entry.delete().where({ key }).toString();
+		return this.query(select)
+			.then(rows => {
+				const row = rows[0];
+				if (row === undefined) {
+					return false;
+				}
+				return this.query(del)
+					.then(() => true);
+			});
 	}
 
 	clear() {
-		return this.connected
-			.then(() => this.Entry.destroy({
-				where: {
-					key: { $like: `${this.namespace}:%` }
-				}
-			}))
+		const del = this.entry.delete(this.entry.key.like(`${this.namespace}:%`)).toString();
+		return this.query(del)
 			.then(() => undefined);
 	}
 }
