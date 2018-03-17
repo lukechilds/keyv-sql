@@ -21,7 +21,7 @@ class KeyvSql extends EventEmitter {
 				{
 					name: 'key',
 					primaryKey: true,
-					dataType: `VARCHAR(${Number(this.opts.keySize)})`
+					dataType: 'TEXT'
 				},
 				{
 					name: 'value',
