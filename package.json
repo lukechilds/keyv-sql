@@ -46,7 +46,7 @@
     "keyv": "*",
     "@keyv/test-suite": "*",
     "nyc": "^11.0.3",
-    "pify": "^3.0.0",
+    "pify": "^4.0.0",
     "requirable": "^1.0.1",
     "sqlite3": "^4.0.0",
     "this": "^1.0.2",
