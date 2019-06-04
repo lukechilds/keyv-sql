@@ -1,7 +1,7 @@
 'use strict';
 
 const EventEmitter = require('events');
-const Sql = require('sql').Sql;
+const Sql = require('node-sql-2').Sql;
 
 class KeyvSql extends EventEmitter {
 	constructor(opts) {
