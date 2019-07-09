@@ -41,15 +41,15 @@
   },
   "devDependencies": {
     "@keyv/test-suite": "*",
-    "ava": "^2.0.0",
+    "ava": "^2.2.0",
     "coveralls": "^3.0.0",
     "eslint-config-xo-lukechilds": "^1.0.0",
     "keyv": "*",
     "nyc": "^14.1.1",
-    "pify": "^3.0.0",
+    "pify": "^4.0.1",
     "requirable": "^1.0.1",
     "sqlite3": "^4.0.0",
     "this": "^1.0.2",
-    "xo": "^0.19.0"
+    "xo": "^0.24.0"
   }
 }
