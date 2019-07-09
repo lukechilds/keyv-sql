@@ -23,7 +23,7 @@ class TestSqlite extends KeyvSql {
 				}
 			});
 		})
-		.then(db => pify(db.all).bind(db));
+			.then(db => pify(db.all).bind(db));
 
 		super(opts);
 	}

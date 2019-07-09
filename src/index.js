@@ -1,7 +1,7 @@
 'use strict';
 
 const EventEmitter = require('events');
-const Sql = require('sql').Sql;
+const { Sql } = require('sql');
 
 class KeyvSql extends EventEmitter {
 	constructor(opts) {
@@ -33,7 +33,7 @@ class KeyvSql extends EventEmitter {
 
 		const connected = this.opts.connect()
 			.then(query => query(createTable).then(() => query))
-			.catch(err => this.emit('error', err));
+			.catch(error => this.emit('error', error));
 
 		this.query = sqlString => connected
 			.then(query => query(sqlString));
@@ -47,6 +47,7 @@ class KeyvSql extends EventEmitter {
 				if (row === undefined) {
 					return undefined;
 				}
+
 				return row.value;
 			});
 	}
@@ -56,11 +57,13 @@ class KeyvSql extends EventEmitter {
 		if (this.opts.dialect === 'mysql') {
 			value = value.replace(/\\/g, '\\\\');
 		}
+
 		if (this.opts.dialect === 'postgres') {
 			upsert = this.entry.insert({ key, value }).onConflict({ columns: ['key'], update: ['value'] }).toString();
-		} else {
+		}	else {
 			upsert = this.entry.replace({ key, value }).toString();
 		}
+
 		return this.query(upsert);
 	}
 
@@ -70,9 +73,11 @@ class KeyvSql extends EventEmitter {
 		return this.query(select)
 			.then(rows => {
 				const row = rows[0];
+
 				if (row === undefined) {
 					return false;
 				}
+
 				return this.query(del)
 					.then(() => true);
 			});
